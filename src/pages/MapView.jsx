@@ -18,7 +18,7 @@ import busImage from "../assets/location.png";
 import { MagnifyingGlassIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 
 const API_KEY = "5b3ce3597851110001cf624824c51333a9f64c12b40c264a4665395c";
-const START_COORDS = [26.8429192, 75.6557093]; // Jaipur
+const START_COORDS = [26.8429192, 75.6557093]; //Jaipur
 
 const createIcon = (iconUrl) =>
   new L.Icon({

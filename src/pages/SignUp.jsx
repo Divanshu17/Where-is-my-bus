@@ -114,6 +114,7 @@ function SignUp() {
               Phone Number
             </label>
             <input
+            // type="tel"
               type="tel"
               name="phoneNumber"
               value={formData.phoneNumber}
@@ -125,6 +126,9 @@ function SignUp() {
           <button type="submit" className="w-full btn-primary mt-6">
             Create Account
           </button>
+
+
+
         </form>
         <p className="mt-4 text-center text-gray-600">
           Already have an account?{' '}
