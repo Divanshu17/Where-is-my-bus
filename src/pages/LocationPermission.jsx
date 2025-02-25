@@ -18,7 +18,7 @@ function LocationPermission() {
         (error) => {
           
 
-          
+
           console.error('Location access denied:', error);
         }
       );
@@ -57,6 +57,7 @@ function LocationPermission() {
           onClick={handleEnableLocation}
           className="btn-primary w-full"
         >
+          
 
           Enable Location Access
         </button>
