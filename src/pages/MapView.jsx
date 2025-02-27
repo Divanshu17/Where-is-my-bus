@@ -44,8 +44,10 @@ const getDistance = (coord1, coord2) => {
   
 const [lat2, lon2] = coord2;
 
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
+  
+const φ1 = (lat1 * Math.PI) / 180;
+
+const φ2 = (lat2 * Math.PI) / 180;
 
   const Δφ = ((lat2 - lat1) * Math.PI) / 180;
   const Δλ = ((lon2 - lon1) * Math.PI) / 180;
@@ -75,6 +77,9 @@ const MapView = () => {
   const [busIndex, setBusIndex] = useState(0);
 
   const [notifications, setNotifications] = useState([]);
+
+  
+const API_KEY = "5b3ce3597851110001cf624824c51333a9f64c12b40c264a4665395c"
 
   useEffect(() => {
     if (!destination[0] || !destination[1]) return;
@@ -160,6 +165,8 @@ const MapView = () => {
     }
   }, [route, busIndex, stops]);
 
+
+
   //navbar, map container
 
   return (
@@ -186,6 +193,8 @@ const MapView = () => {
 
       <div className="w-full max-w-md h-[55vh] bg-white rounded-2xl overflow-hidden shadow-lg">
         <MapContainer
+          
+          
           center={START_COORDS}
           zoom={12}
           style={{ height: "100%", width: "100%" }}
