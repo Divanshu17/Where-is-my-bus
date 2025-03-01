@@ -1,23 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MagnifyingGlassIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, Bars3Icon, BookmarkIcon } from "@heroicons/react/24/outline";
 import SideNavBar from "./components/SideNavBar.jsx";
 
 function RoutesPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [savedRoutes, setSavedRoutes] = useState([]);
 
-  // Routes with stops (waypoints)
   const routes = [
     {
       id: 1,
       number: "101",
       name: "JKLU-Mansarover",
       eta: "5 min",
-      destination: [26.891839, 75.743184], // Final destination
-      stops: [[26.85117, 75.641325]], // Stop 1
+      destination: [26.891839, 75.743184],
+      stops: [[26.85117, 75.641325]],
     },
     {
       id: 2,
@@ -37,11 +37,24 @@ function RoutesPage() {
     },
   ];
 
-  const filteredRoutes = routes.filter(
-    (route) =>
-      route.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      route.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Load saved routes from localStorage on page load
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("savedRoutes")) || [];
+    setSavedRoutes(saved);
+  }, []);
+
+  const toggleSaveRoute = (route) => {
+    let updatedSavedRoutes = [...savedRoutes];
+
+    if (savedRoutes.some((saved) => saved.id === route.id)) {
+      updatedSavedRoutes = savedRoutes.filter((saved) => saved.id !== route.id);
+    } else {
+      updatedSavedRoutes.push(route);
+    }
+
+    setSavedRoutes(updatedSavedRoutes);
+    localStorage.setItem("savedRoutes", JSON.stringify(updatedSavedRoutes));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
@@ -49,10 +62,7 @@ function RoutesPage() {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           {/* Menu Button */}
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 rounded-md hover:bg-gray-100"
-          >
+          <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-md hover:bg-gray-100">
             <Bars3Icon className="h-6 w-6 text-gray-600" />
           </button>
 
@@ -71,37 +81,34 @@ function RoutesPage() {
         </div>
       </header>
 
-      
-      
-      {/*sidebar */}
+      {/* Sidebar */}
       <SideNavBar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/*Routeslist */}
+      {/* Routes List */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="space-y-4">
-          {filteredRoutes.map((route) => (
+          {routes.map((route) => (
             <motion.div
               key={route.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() =>
-                navigate(
-                  `/map/${route.id}?lat=${route.destination[0]}&lng=${route.destination[1]}&stops=${JSON.stringify(
-                    route.stops
-                  )}`
-                )
-              }
+              className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow flex justify-between items-center"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Bus {route.number}
-                  </h3>
-                  <p className="text-gray-600">{route.name}</p>
-                </div>
-                <div className="text-blue-600 font-semibold">{route.eta}</div>
+              <div onClick={() => navigate(`/map/${route.id}?lat=${route.destination[0]}&lng=${route.destination[1]}&stops=${JSON.stringify(route.stops)}`)}>
+                <h3 className="text-lg font-semibold text-gray-900">Bus {route.number}</h3>
+                <p className="text-gray-600">{route.name}</p>
               </div>
+
+              {/* Save Route Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleSaveRoute(route);
+                }}
+                className={`p-2 rounded-full ${savedRoutes.some((saved) => saved.id === route.id) ? "text-blue-600" : "text-gray-400"} hover:bg-gray-100`}
+              >
+                <BookmarkIcon className="h-6 w-6" />
+              </button>
             </motion.div>
           ))}
         </div>
