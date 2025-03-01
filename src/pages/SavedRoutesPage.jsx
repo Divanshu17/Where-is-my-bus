@@ -26,7 +26,7 @@ function SavedRoutesPage() {
         <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-white shadow-md">
           <ArrowLeftIcon className="h-6 w-6 text-gray-600" />
         </button>
-        <h2 className="text-xl font-semibold text-gray-900">Saved Routes</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Saved</h2>
         <div className="w-10"></div>
       </div>
 
@@ -38,16 +38,22 @@ function SavedRoutesPage() {
               key={route.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-md p-4 flex justify-between items-center"
+              className="bg-transparent rounded-lg p-4 flex justify-between items-center border border-gray-700"
             >
               <div onClick={() => navigate(`/map/${route.id}?lat=${route.destination[0]}&lng=${route.destination[1]}&stops=${JSON.stringify(route.stops)}`)}>
-                <h3 className="text-lg font-semibold text-gray-900">Bus {route.number}</h3>
-                <p className="text-gray-600">{route.name}</p>
+                {/* Bus Details */}
+                <div className="flex items-center space-x-2 mb-1">
+                  <div className="border border-gray-700 rounded-md px-2 py-1 flex items-center space-x-1">
+                    <span className="text-gray-800 text-sm">{route.number}</span>
+                  </div>
+                  <span className="text-sm text-gray-600">{route.eta}</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">{route.name}</h3>
               </div>
 
               {/* Remove Saved Route */}
-              <button onClick={() => removeSavedRoute(route.id)} className="text-red-600 p-2 rounded-full hover:bg-gray-100">
-                <BookmarkIcon className="h-6 w-6" />
+              <button onClick={() => removeSavedRoute(route.id)} className="text-gray-700">
+                <BookmarkIcon className="h-5 w-5" />
               </button>
             </motion.div>
           ))}
