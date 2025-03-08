@@ -34,7 +34,7 @@ function SignUp() {
     // Simulate form submission
     setTimeout(() => {
       setIsSubmitting(false);
-      navigate("/location-permission");
+    navigate("/location-permission");
     }, 1000);
   };
 
@@ -252,15 +252,15 @@ function SignUp() {
                 exit="exit"
                 className="space-y-5"
               >
-                {/* Name */}
+          {/* Name */}
                 <motion.div variants={itemVariants} className="relative">
-                  <UserIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    placeholder="Enter your name"
+            <UserIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              placeholder="Enter your name"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm bg-white/80 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${
                       formErrors.fullName ? "border-red-500" : "border-gray-300"
                     }`}
@@ -272,15 +272,15 @@ function SignUp() {
                   )}
                 </motion.div>
 
-                {/* Email */}
+          {/* Email */}
                 <motion.div variants={itemVariants} className="relative">
-                  <EnvelopeIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Enter your Email"
+            <EnvelopeIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter your Email"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm bg-white/80 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${
                       formErrors.email ? "border-red-500" : "border-gray-300"
                     }`}
@@ -313,15 +313,15 @@ function SignUp() {
                 exit="exit"
                 className="space-y-5"
               >
-                {/* Password */}
+          {/* Password */}
                 <motion.div variants={itemVariants} className="relative">
-                  <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                  <input
+            <LockClosedIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <input
                     type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Create a Password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Create a Password"
                     className={`w-full pl-10 pr-12 py-3 border rounded-lg shadow-sm bg-white/80 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${
                       formErrors.password ? "border-red-500" : "border-gray-300"
                     }`}
@@ -364,20 +364,20 @@ function SignUp() {
                         <p className="text-xs text-gray-600 pl-1">
                           *Must be at least 8 characters
                         </p>
-                      </div>
+          </div>
                     )
                   )}
                 </motion.div>
 
-                {/* Phone Number */}
+          {/* Phone Number */}
                 <motion.div variants={itemVariants} className="relative">
-                  <PhoneIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
-                    placeholder="Enter your Phone No"
+            <PhoneIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <input
+              type="tel"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              placeholder="Enter your Phone No"
                     className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm bg-white/80 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${
                       formErrors.phoneNumber
                         ? "border-red-500"
@@ -402,7 +402,7 @@ function SignUp() {
                   </motion.button>
                   <motion.button
                     variants={itemVariants}
-                    type="submit"
+            type="submit"
                     disabled={isSubmitting}
                     className="flex-1 py-3 text-white text-lg font-semibold rounded-lg shadow-md bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center"
                   >

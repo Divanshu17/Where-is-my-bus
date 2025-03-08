@@ -219,10 +219,10 @@ function SignInSelection() {
 
         <AnimatePresence>
           {showFeatures && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
               className="bg-white/70 backdrop-blur-sm rounded-xl p-4 mb-6 shadow-md"
             >
               <h3 className="text-center text-gray-700 font-medium mb-3">
@@ -253,12 +253,12 @@ function SignInSelection() {
         <motion.div variants={itemVariants} className="text-center">
           <p className="text-gray-600">
             Don't have an account?{" "}
-            <button
+          <button
               onClick={() => navigate("/signup")}
               className="text-blue-600 font-medium hover:underline transition-all"
-            >
+          >
               Sign up
-            </button>
+          </button>
           </p>
         </motion.div>
       </motion.div>

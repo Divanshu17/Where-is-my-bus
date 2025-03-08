@@ -162,7 +162,7 @@ function LocationPermission() {
                 <div className="absolute inset-0 bg-blue-100 rounded-full scale-[1.2] blur-md"></div>
                 <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-full">
                   <MapPinIcon className="h-12 w-12 text-white" />
-                </div>
+        </div>
 
                 {/* Animated rings */}
                 <motion.div
@@ -278,7 +278,7 @@ function LocationPermission() {
                   <div className="bg-red-100 p-4 rounded-lg mb-4 text-center">
                     <p className="text-red-600">{errorMessage}</p>
                   </div>
-                  <button
+        <button
                     onClick={resetPermissionState}
                     className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all"
                   >

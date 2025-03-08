@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Your Bus Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #3b82f6;
+            margin-bottom: 10px;
+        }
+
+        .section {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .section.alt {
+            background-color: #eff6ff;
+        }
+
+        .section h2 {
+            color: #1f2937;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .detail-row {
+            margin: 5px 0;
+        }
+
+        .detail-row strong {
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 30px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Your Bus Ticket is Confirmed!</h1>
+            <p>Thank you for booking with BusTracker</p>
+        </div>
+
+        <div class="section">
+            <h2>Ticket Details</h2>
+            <p class="detail-row"><strong>Ticket ID:</strong> {{ticket_id}}</p>
+            <p class="detail-row"><strong>Bus Number:</strong> {{bus_number}}</p>
+            <p class="detail-row"><strong>Route:</strong> {{route}}</p>
+            <p class="detail-row"><strong>Date:</strong> {{departure_date}}</p>
+            <p class="detail-row"><strong>Departure Time:</strong> {{departure_time}}</p>
+            <p class="detail-row"><strong>Seat Number:</strong> {{seat_number}}</p>
+            <p class="detail-row"><strong>Amount Paid:</strong> {{fare}}</p>
+        </div>
+
+        <div class="section alt">
+            <h2>Passenger Information</h2>
+            <p class="detail-row"><strong>Name:</strong> {{to_name}}</p>
+            <p class="detail-row"><strong>Email:</strong> {{to_email}}</p>
+        </div>
+
+        <div class="section">
+            <h2>Payment Information</h2>
+            <p class="detail-row"><strong>Transaction ID:</strong> {{transaction_id}}</p>
+            <p class="detail-row"><strong>Payment Method:</strong> {{payment_method}}</p>
+            <p class="detail-row"><strong>Booking Date:</strong> {{booking_date}}</p>
+        </div>
+
+        <div class="footer">
+            <p>{{message}}</p>
+            <p>Please show this ticket during your journey.</p>
+            <p>Have a safe journey!</p>
+        </div>
+
+        <div class="copyright">
+            <p>© 2023 BusTracker. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>
