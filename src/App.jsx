@@ -13,7 +13,7 @@ import Notifications from './pages/Notifications';
 import SavedRoutesPage from './pages/SavedRoutesPage';
 
 import RouteTrackingPage from './pages/RouteTrackingPage';
-
+import PaymentPage from './pages/PaymentPage';
 import FeedbackPage from './pages/FeedbackPage';
 
 import Profile from './pages/Profile'; // ✅ Import the Profile Page
@@ -31,6 +31,8 @@ function App() {
       <Route path="/map/:routeId" element={<MapView />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/saved-routes" element={<SavedRoutesPage />} />
+
+      <Route path="/payment" element={<PaymentPage />} />
 
       <Route path="/track/:routeId" element={<RouteTrackingPage />} />
 

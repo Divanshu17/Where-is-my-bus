@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { 
-  MagnifyingGlassIcon, 
-  Bars3Icon, 
-  BookmarkIcon, 
-  TruckIcon // ✅ Using TruckIcon instead of BusIcon
+import {
+  MagnifyingGlassIcon,
+  Bars3Icon,
+  BookmarkIcon,
+  TruckIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkIconSolid } from "@heroicons/react/24/solid";
 import SideNavBar from "./components/SideNavBar.jsx";
@@ -16,18 +16,54 @@ function RoutesPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [savedRoutes, setSavedRoutes] = useState([]);
 
-  const routes = [
-    { id: 1, number: "24", name: "Ajmeri Gate - Ramgadh", eta: "40 min", time: "1:30 PM - 2:00 PM" },
-    { id: 2, number: "204", name: "Sanganer - Choti Chaupar", eta: "40 min", time: "1:30 PM - 2:15 PM" },
-    { id: 3, number: "204", name: "Joshi Marg - Mahatma Gandhi Hospital", eta: "40 min", time: "1:30 PM - 2:15 PM" },
-    { id: 4, number: "204", name: "Chandpol - Bagru stop", eta: "40 min", time: "1:30 PM - 2:15 PM" },
-  ];
-
+  // Load saved routes from localStorage when component mounts
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("savedRoutes")) || [];
-    setSavedRoutes(saved);
+    const storedRoutes = JSON.parse(localStorage.getItem("savedRoutes")) || [];
+    setSavedRoutes(storedRoutes);
   }, []);
 
+  // Routes with stops (waypoints)
+  const routes = [
+    {
+      id: 1,
+      number: "101",
+      name: "JKLU-Mansarover",
+      eta: "5 min",
+      destination: [26.891839, 75.743184], // Final destination
+      stops: [[26.85117, 75.641325]], // Stop 1
+    },
+    {
+      id: 2,
+      number: "102",
+      name: "JKLU-Tonk Phatak",
+      eta: "10 min",
+      destination: [27.00047, 75.770244],
+      stops: [
+        [26.9012, 75.7556],
+        [26.9208, 75.765],
+      ],
+    },
+    {
+      id: 3,
+      number: "303",
+      name: "Amer Fort",
+      eta: "15 min",
+      destination: [26.988241, 75.962551],
+      stops: [
+        [26.9356, 75.8754],
+        [26.9608, 75.93],
+      ],
+    },
+  ];
+
+  // Filter routes based on search query
+  const filteredRoutes = routes.filter(
+    (route) =>
+      route.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      route.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Function to toggle saving a route
   const toggleSaveRoute = (route) => {
     let updatedSavedRoutes = [...savedRoutes];
 
@@ -42,17 +78,18 @@ function RoutesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#D9C9A8] px-4 py-6 relative">
+    <div className="min-h-screen bg-[#D9C9A8] relative px-4 py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <button onClick={() => setIsSidebarOpen(true)} className="p-2 rounded-md">
+      <header className="flex items-center justify-between mb-4">
+        {/* Menu Button */}
+        <button onClick={() => setIsSidebarOpen(true)} className="p-2">
           <Bars3Icon className="h-6 w-6 text-gray-900" />
         </button>
         <h2 className="text-[22px] font-extrabold tracking-wider uppercase text-gray-900">
           ROUTES
         </h2>
         <div className="w-10"></div>
-      </div>
+      </header>
 
       {/* Search Box */}
       <div className="flex flex-col items-center mb-6">
@@ -76,7 +113,7 @@ function RoutesPage() {
 
       {/* Routes List */}
       <div className="max-w-7xl mx-auto space-y-4">
-        {routes.map((route) => {
+        {filteredRoutes.map((route) => {
           const isSaved = savedRoutes.some((saved) => saved.id === route.id);
 
           return (
@@ -84,18 +121,23 @@ function RoutesPage() {
               key={route.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 border-b border-gray-700 flex justify-between items-center"
+              className="p-4 border-b border-gray-700 flex justify-between items-center cursor-pointer"
+              onClick={() => navigate(`/track/${route.id}`)}
             >
-              <div onClick={() => navigate(`/map/${route.id}`)} className="cursor-pointer">
+              {/* Route Info */}
+              <div className="flex flex-col">
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="border border-gray-700 rounded-md px-2 py-1 flex items-center space-x-1">
-                    <TruckIcon className="h-4 w-4 text-gray-800" /> {/* ✅ TruckIcon used */}
-                    <span className="text-gray-800 text-sm">{route.number}</span>
+                    <TruckIcon className="h-4 w-4 text-gray-800" />{" "}
+                    <span className="text-gray-800 text-sm">
+                      {route.number}
+                    </span>
                   </div>
                   <span className="text-sm text-gray-600">{route.eta}</span>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">{route.time}</h3>
-                <p className="text-gray-600">{route.name}</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {route.name}
+                </h3>
               </div>
 
               {/* Save Route Button (Toggle between Outline & Solid) */}
