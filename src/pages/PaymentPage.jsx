@@ -43,6 +43,7 @@ const PaymentPage = () => {
   const [isEmailSending, setIsEmailSending] = useState(false);
   const [showEmailToast, setShowEmailToast] = useState(false);
   const [emailSendError, setEmailSendError] = useState(null);
+  const [autoSendEmail, setAutoSendEmail] = useState(true); // New state for auto-sending email
 
   // Get user data from localStorage if available
   useEffect(() => {
@@ -119,10 +120,28 @@ const PaymentPage = () => {
       setTicketData(newTicket);
       setIsPaymentSuccessful(true);
 
-      // Generate PDF and send email
+      // Generate PDF and send email automatically if enabled
       setTimeout(() => {
         const pdfBase64 = generatePDFAndGetBase64(newTicket);
-        sendEmailWithTicket(newTicket, pdfBase64);
+
+        if (autoSendEmail) {
+          setIsEmailSending(true);
+          setShowEmailToast(true);
+
+          try {
+            sendEmailWithTicket(newTicket, pdfBase64);
+            setIsEmailSent(true);
+            setEmailSendError(null);
+          } catch (error) {
+            setIsEmailSent(false);
+            setEmailSendError(
+              "Failed to send email automatically. You can try sending it manually."
+            );
+          } finally {
+            setIsEmailSending(false);
+            setTimeout(() => setShowEmailToast(false), 5000);
+          }
+        }
       }, 1000);
     }, 2000);
   };
@@ -255,7 +274,7 @@ const PaymentPage = () => {
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <AnimatePresence>
         {isPaymentSuccessful ? (
           <motion.div
@@ -264,38 +283,57 @@ const PaymentPage = () => {
             exit={{ opacity: 0 }}
             className="container mx-auto px-4 py-8"
           >
-            <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-              <div className="bg-green-500 p-6 text-white text-center">
-                <CheckCircle className="mx-auto mb-4 h-16 w-16" />
+            <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-8 text-white text-center">
+                <div className="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="h-12 w-12" />
+                </div>
                 <h2 className="text-2xl font-bold">Payment Successful!</h2>
-                <p className="mt-2">
+                <p className="mt-2 opacity-90">
                   Your ticket has been booked successfully.
                 </p>
               </div>
 
               <div className="p-6">
                 <div className="mb-6 border-b pb-4">
-                  <h3 className="text-lg font-semibold mb-2">Ticket Details</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="text-gray-600">Ticket ID:</div>
-                    <div className="font-medium">{ticketData?.ticketId}</div>
-                    <div className="text-gray-600">Bus Number:</div>
-                    <div className="font-medium">{ticketData?.busNumber}</div>
-                    <div className="text-gray-600">Route:</div>
-                    <div className="font-medium">{ticketData?.route}</div>
-                    <div className="text-gray-600">From:</div>
-                    <div className="font-medium">{ticketData?.source}</div>
-                    <div className="text-gray-600">To:</div>
-                    <div className="font-medium">{ticketData?.destination}</div>
-                    <div className="text-gray-600">Departure:</div>
-                    <div className="font-medium">
+                  <h3 className="text-lg font-semibold mb-4 flex items-center">
+                    <Bus className="mr-2 text-blue-500" size={20} />
+                    Ticket Details
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="text-gray-500">Ticket ID:</div>
+                    <div className="font-medium text-gray-800">
+                      {ticketData?.ticketId}
+                    </div>
+                    <div className="text-gray-500">Bus Number:</div>
+                    <div className="font-medium text-gray-800">
+                      {ticketData?.busNumber}
+                    </div>
+                    <div className="text-gray-500">Route:</div>
+                    <div className="font-medium text-gray-800">
+                      {ticketData?.route}
+                    </div>
+                    <div className="text-gray-500">From:</div>
+                    <div className="font-medium text-gray-800">
+                      {ticketData?.source}
+                    </div>
+                    <div className="text-gray-500">To:</div>
+                    <div className="font-medium text-gray-800">
+                      {ticketData?.destination}
+                    </div>
+                    <div className="text-gray-500">Departure:</div>
+                    <div className="font-medium text-gray-800">
                       {new Date(ticketData?.departureDate).toLocaleDateString()}{" "}
                       {ticketData?.departureTime}
                     </div>
-                    <div className="text-gray-600">Seat:</div>
-                    <div className="font-medium">{ticketData?.seatNumber}</div>
-                    <div className="text-gray-600">Fare:</div>
-                    <div className="font-medium">{ticketData?.fare}</div>
+                    <div className="text-gray-500">Seat:</div>
+                    <div className="font-medium text-gray-800">
+                      {ticketData?.seatNumber}
+                    </div>
+                    <div className="text-gray-500">Fare:</div>
+                    <div className="font-medium text-gray-800">
+                      {ticketData?.fare}
+                    </div>
                   </div>
                 </div>
 
@@ -309,42 +347,44 @@ const PaymentPage = () => {
                       link.download = `Ticket_${ticketData.ticketId}.pdf`;
                       link.click();
                     }}
-                    className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                    className="flex items-center justify-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
                   >
                     <Download size={18} />
                     Download Ticket
                   </button>
 
-                  <button
-                    onClick={() => {
-                      setIsEmailSending(true);
-                      setShowEmailToast(true);
+                  {!isEmailSent && (
+                    <button
+                      onClick={() => {
+                        setIsEmailSending(true);
+                        setShowEmailToast(true);
 
-                      try {
-                        const pdfBase64 = generatePDFAndGetBase64(ticketData);
-                        sendEmailWithTicket(ticketData, pdfBase64);
-                        setIsEmailSent(true);
-                        setEmailSendError(null);
-                      } catch (error) {
-                        setIsEmailSent(false);
-                        setEmailSendError(
-                          "Failed to send email. Please try again."
-                        );
-                      } finally {
-                        setIsEmailSending(false);
-                        setTimeout(() => setShowEmailToast(false), 5000);
-                      }
-                    }}
-                    disabled={isEmailSending}
-                    className="flex items-center justify-center gap-2 bg-gray-800 text-white py-2 px-4 rounded-md hover:bg-gray-900 transition-colors disabled:bg-gray-400"
-                  >
-                    <Mail size={18} />
-                    {isEmailSending ? "Sending..." : "Send to Email"}
-                  </button>
+                        try {
+                          const pdfBase64 = generatePDFAndGetBase64(ticketData);
+                          sendEmailWithTicket(ticketData, pdfBase64);
+                          setIsEmailSent(true);
+                          setEmailSendError(null);
+                        } catch (error) {
+                          setIsEmailSent(false);
+                          setEmailSendError(
+                            "Failed to send email. Please try again."
+                          );
+                        } finally {
+                          setIsEmailSending(false);
+                          setTimeout(() => setShowEmailToast(false), 5000);
+                        }
+                      }}
+                      disabled={isEmailSending}
+                      className="flex items-center justify-center gap-2 bg-gray-800 text-white py-3 px-4 rounded-lg hover:bg-gray-900 transition-colors shadow-sm disabled:bg-gray-400"
+                    >
+                      <Mail size={18} />
+                      {isEmailSending ? "Sending..." : "Send to Email"}
+                    </button>
+                  )}
 
                   <button
                     onClick={() => navigate("/tickets")}
-                    className="flex items-center justify-center gap-2 border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-center gap-2 border border-gray-300 py-3 px-4 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     View All Tickets
                   </button>
@@ -358,10 +398,10 @@ const PaymentPage = () => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                className={`fixed bottom-4 right-4 p-4 rounded-md shadow-lg flex items-center gap-3 ${
+                className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg flex items-center gap-3 ${
                   isEmailSent
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "bg-red-100 text-red-800 border border-red-200"
                 }`}
               >
                 {isEmailSent ? (
@@ -392,26 +432,31 @@ const PaymentPage = () => {
           >
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center text-blue-600 mb-6 hover:underline"
+              className="flex items-center text-blue-600 mb-6 hover:underline font-medium"
             >
               <ArrowLeft size={18} className="mr-1" />
               Back
             </button>
 
+            <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center md:text-left">
+              Complete Your Payment
+            </h1>
+
             <div className="grid md:grid-cols-3 gap-8">
               <div className="md:col-span-2">
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                  <h2 className="text-xl font-semibold mb-4">
+                <div className="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-100">
+                  <h2 className="text-xl font-semibold mb-6 flex items-center">
+                    <CreditCard className="mr-2 text-blue-500" size={20} />
                     Payment Details
                   </h2>
 
                   <div className="mb-6">
-                    <div className="flex gap-4 mb-4">
+                    <div className="flex flex-wrap gap-3 mb-4">
                       <button
-                        className={`flex items-center gap-2 px-4 py-2 rounded-md border ${
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-all ${
                           paymentMethod === "card"
-                            ? "border-blue-500 bg-blue-50 text-blue-600"
-                            : "border-gray-300"
+                            ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
+                            : "border-gray-200 hover:border-gray-300"
                         }`}
                         onClick={() => setPaymentMethod("card")}
                       >
@@ -419,10 +464,10 @@ const PaymentPage = () => {
                         Card
                       </button>
                       <button
-                        className={`flex items-center gap-2 px-4 py-2 rounded-md border ${
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-all ${
                           paymentMethod === "upi"
-                            ? "border-blue-500 bg-blue-50 text-blue-600"
-                            : "border-gray-300"
+                            ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
+                            : "border-gray-200 hover:border-gray-300"
                         }`}
                         onClick={() => setPaymentMethod("upi")}
                       >
@@ -430,10 +475,10 @@ const PaymentPage = () => {
                         UPI
                       </button>
                       <button
-                        className={`flex items-center gap-2 px-4 py-2 rounded-md border ${
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border transition-all ${
                           paymentMethod === "cash"
-                            ? "border-blue-500 bg-blue-50 text-blue-600"
-                            : "border-gray-300"
+                            ? "border-blue-500 bg-blue-50 text-blue-600 shadow-sm"
+                            : "border-gray-200 hover:border-gray-300"
                         }`}
                         onClick={() => setPaymentMethod("cash")}
                       >
@@ -443,8 +488,8 @@ const PaymentPage = () => {
                     </div>
                   </div>
 
-                  <form onSubmit={handlePayment}>
-                    <div className="mb-4">
+                  <form onSubmit={handlePayment} className="space-y-5">
+                    <div>
                       <label className="block text-gray-700 text-sm font-medium mb-2">
                         Passenger Name
                       </label>
@@ -457,14 +502,14 @@ const PaymentPage = () => {
                           type="text"
                           value={passengerName}
                           onChange={(e) => setPassengerName(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="Enter your full name"
                           required
                         />
                       </div>
                     </div>
 
-                    <div className="mb-4">
+                    <div>
                       <label className="block text-gray-700 text-sm font-medium mb-2">
                         Email Address
                       </label>
@@ -480,9 +525,9 @@ const PaymentPage = () => {
                             setPassengerEmail(e.target.value);
                             setEmailError("");
                           }}
-                          className={`w-full pl-10 pr-4 py-2 border ${
+                          className={`w-full pl-10 pr-4 py-3 border ${
                             emailError ? "border-red-500" : "border-gray-300"
-                          } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                          } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                           placeholder="Enter your email address"
                           required
                         />
@@ -494,7 +539,7 @@ const PaymentPage = () => {
                       )}
                     </div>
 
-                    <div className="mb-4">
+                    <div>
                       <label className="block text-gray-700 text-sm font-medium mb-2">
                         Destination Stop
                       </label>
@@ -504,7 +549,7 @@ const PaymentPage = () => {
                           className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                         />
                         <div
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md flex justify-between items-center cursor-pointer"
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg flex justify-between items-center cursor-pointer hover:border-gray-400 transition-colors"
                           onClick={() => setShowStopDropdown(!showStopDropdown)}
                         >
                           <span
@@ -518,18 +563,18 @@ const PaymentPage = () => {
                         </div>
 
                         {showStopDropdown && (
-                          <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                          <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
                             {stops.map((stop) => (
                               <div
                                 key={stop.name}
-                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between"
+                                className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex justify-between border-b border-gray-100 last:border-0"
                                 onClick={() => {
                                   setSelectedStop(stop.name);
                                   setShowStopDropdown(false);
                                 }}
                               >
                                 <span>{stop.name}</span>
-                                <span className="text-gray-600">
+                                <span className="font-medium text-blue-600">
                                   {stop.fare}
                                 </span>
                               </div>
@@ -541,7 +586,7 @@ const PaymentPage = () => {
 
                     {paymentMethod === "card" && (
                       <>
-                        <div className="mb-4">
+                        <div>
                           <label className="block text-gray-700 text-sm font-medium mb-2">
                             Card Number
                           </label>
@@ -559,14 +604,14 @@ const PaymentPage = () => {
                                   setCardNumber(value);
                                 }
                               }}
-                              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="1234 5678 9012 3456"
                               required={paymentMethod === "card"}
                             />
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-gray-700 text-sm font-medium mb-2">
                               Expiry Date
@@ -592,7 +637,7 @@ const PaymentPage = () => {
                                     );
                                   }
                                 }}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="MM/YY"
                                 required={paymentMethod === "card"}
                               />
@@ -620,7 +665,7 @@ const PaymentPage = () => {
                                     setCvv(value);
                                   }
                                 }}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="123"
                                 required={paymentMethod === "card"}
                               />
@@ -631,7 +676,7 @@ const PaymentPage = () => {
                     )}
 
                     {paymentMethod === "upi" && (
-                      <div className="mb-6">
+                      <div>
                         <label className="block text-gray-700 text-sm font-medium mb-2">
                           UPI ID
                         </label>
@@ -642,7 +687,7 @@ const PaymentPage = () => {
                           />
                           <input
                             type="text"
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="username@upi"
                             required={paymentMethod === "upi"}
                           />
@@ -650,14 +695,30 @@ const PaymentPage = () => {
                       </div>
                     )}
 
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="autoSendEmail"
+                        checked={autoSendEmail}
+                        onChange={(e) => setAutoSendEmail(e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor="autoSendEmail"
+                        className="ml-2 block text-sm text-gray-700"
+                      >
+                        Automatically send ticket to my email
+                      </label>
+                    </div>
+
                     <button
                       type="submit"
                       disabled={!selectedStop || isProcessing}
-                      className={`w-full py-3 px-4 rounded-md text-white font-medium ${
+                      className={`w-full py-3 px-4 rounded-lg text-white font-medium ${
                         !selectedStop || isProcessing
                           ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-700"
-                      } transition-colors flex items-center justify-center gap-2`}
+                          : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+                      } transition-all shadow-sm flex items-center justify-center gap-2`}
                     >
                       {isProcessing ? (
                         <>
@@ -673,73 +734,71 @@ const PaymentPage = () => {
               </div>
 
               <div className="md:col-span-1">
-                <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
-                  <h3 className="text-lg font-semibold mb-4">Trip Summary</h3>
+                <div className="bg-white rounded-xl shadow-md p-6 sticky top-6 border border-gray-100">
+                  <h3 className="text-lg font-semibold mb-6 flex items-center">
+                    <Bus className="mr-2 text-blue-500" size={20} />
+                    Trip Summary
+                  </h3>
 
-                  <div className="space-y-4 mb-6">
+                  <div className="space-y-5 mb-6">
                     <div className="flex items-start gap-3">
-                      <Bus
-                        className="text-blue-600 mt-1 flex-shrink-0"
-                        size={18}
-                      />
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <Bus className="text-blue-600" size={18} />
+                      </div>
                       <div>
-                        <p className="text-gray-600 text-sm">Bus</p>
-                        <p className="font-medium">
+                        <p className="text-gray-500 text-sm">Bus</p>
+                        <p className="font-medium text-gray-800">
                           RT-101 (JKLU → Mansarover)
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <MapPin
-                        className="text-blue-600 mt-1 flex-shrink-0"
-                        size={18}
-                      />
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <MapPin className="text-blue-600" size={18} />
+                      </div>
                       <div>
-                        <p className="text-gray-600 text-sm">From</p>
-                        <p className="font-medium">JKLU</p>
+                        <p className="text-gray-500 text-sm">From</p>
+                        <p className="font-medium text-gray-800">JKLU</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <MapPin
-                        className="text-blue-600 mt-1 flex-shrink-0"
-                        size={18}
-                      />
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <MapPin className="text-blue-600" size={18} />
+                      </div>
                       <div>
-                        <p className="text-gray-600 text-sm">To</p>
-                        <p className="font-medium">
+                        <p className="text-gray-500 text-sm">To</p>
+                        <p className="font-medium text-gray-800">
                           {selectedStop || "Select destination"}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Calendar
-                        className="text-blue-600 mt-1 flex-shrink-0"
-                        size={18}
-                      />
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <Calendar className="text-blue-600" size={18} />
+                      </div>
                       <div>
-                        <p className="text-gray-600 text-sm">Date</p>
-                        <p className="font-medium">
+                        <p className="text-gray-500 text-sm">Date</p>
+                        <p className="font-medium text-gray-800">
                           {new Date(Date.now() + 86400000).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Clock
-                        className="text-blue-600 mt-1 flex-shrink-0"
-                        size={18}
-                      />
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <Clock className="text-blue-600" size={18} />
+                      </div>
                       <div>
-                        <p className="text-gray-600 text-sm">Departure Time</p>
-                        <p className="font-medium">10:15 AM</p>
+                        <p className="text-gray-500 text-sm">Departure Time</p>
+                        <p className="font-medium text-gray-800">10:15 AM</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="border-t pt-4">
+                  <div className="border-t pt-4 mt-2">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-gray-600">Fare</span>
                       <span className="font-medium">
@@ -750,9 +809,9 @@ const PaymentPage = () => {
                       <span className="text-gray-600">Service Fee</span>
                       <span className="font-medium">₹0</span>
                     </div>
-                    <div className="flex justify-between items-center pt-2 border-t mt-2">
+                    <div className="flex justify-between items-center pt-3 border-t mt-3">
                       <span className="font-semibold">Total</span>
-                      <span className="font-semibold text-blue-600">
+                      <span className="font-semibold text-blue-600 text-lg">
                         {selectedStopFare || "₹0"}
                       </span>
                     </div>

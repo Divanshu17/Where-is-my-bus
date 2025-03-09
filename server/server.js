@@ -13,6 +13,9 @@ app.use(bodyParser.json({ limit: '50mb' })); // Increased limit for PDF attachme
 // Routes
 app.post('/api/send-ticket', async (req, res) => {
   try {
+
+
+    // require("regenerator-runtime/runtime");
     const { ticketData, pdfBase64 } = req.body;
     
     if (!ticketData || !pdfBase64) {

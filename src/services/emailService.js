@@ -1,5 +1,8 @@
 import emailjs from '@emailjs/browser';
 
+
+// import dotenv from 'assert/strict'
+
 // EmailJS configuration
 const EMAILJS_PUBLIC_KEY = "gfrYAaSitUc7WKG8a";
 const EMAILJS_PRIVATE_KEY = "tE6hf2Jp9TdIuSiJ5Aenj";

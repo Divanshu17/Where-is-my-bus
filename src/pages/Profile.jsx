@@ -57,19 +57,76 @@ function Profile() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem("userData", JSON.stringify(formData));
-      setOriginalData(formData);
-      setIsLoading(false);
-      setIsEditing(false);
-      setSuccessMessage("Profile updated successfully!");
+    // Get token from localStorage
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    const token = userData?.token;
 
-      // Clear success message after 3 seconds
+    if (!token) {
+      setIsLoading(false);
+      setSuccessMessage("Please login again to update your profile");
       setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    }, 1000);
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+
+    // Send update request to backend
+    fetch("http://localhost:5000/api/users/profile", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        fullName: formData.fullName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        ...(formData.password !== "********" && {
+          password: formData.password,
+        }),
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((data) => {
+            throw new Error(data.message || "Something went wrong!");
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        // Update localStorage with new data
+        localStorage.setItem(
+          "userData",
+          JSON.stringify({
+            ...userData,
+            fullName: data.fullName,
+            email: data.email,
+            phoneNumber: data.phoneNumber,
+            token: data.token,
+          })
+        );
+
+        setOriginalData(formData);
+        setIsLoading(false);
+        setIsEditing(false);
+        setSuccessMessage("Profile updated successfully!");
+
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
+      })
+      .catch((error) => {
+        console.error("Update profile error:", error);
+        setIsLoading(false);
+        setSuccessMessage(`Error: ${error.message}`);
+
+        // Clear error message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 3000);
+      });
   };
 
   const handleCancel = () => {
