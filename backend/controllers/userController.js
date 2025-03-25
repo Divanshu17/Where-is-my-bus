@@ -14,10 +14,12 @@ const generateToken = (userId) => {
 exports.signup = async (req, res) => {
   try {
     const { fullName, email, password, phoneNumber } = req.body;
+    console.log('Signup attempt:', { fullName, email, phoneNumber });
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
+      console.log('User already exists:', email);
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -30,6 +32,7 @@ exports.signup = async (req, res) => {
     });
 
     if (user) {
+      console.log('User created successfully:', user._id);
       res.status(201).json({
         _id: user._id,
         fullName: user.fullName,
@@ -40,7 +43,21 @@ exports.signup = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error('Signup error details:', error);
+    if (error.name === 'ValidationError') {
+      // Handle mongoose validation errors
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ 
+        message: 'Validation error', 
+        errors: messages 
+      });
+    }
+    if (error.code === 11000) {
+      // Handle duplicate key error (usually email)
+      return res.status(400).json({ 
+        message: 'Email is already registered' 
+      });
+    }
     res.status(500).json({ 
       message: 'Error creating user',
       error: error.message 
@@ -54,9 +71,16 @@ exports.signup = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt:', { email }); // Don't log passwords
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide email and password' });
+    }
 
     // Find user by email
     const user = await User.findOne({ email });
+    console.log('User found:', user ? 'Yes' : 'No');
     
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
@@ -64,10 +88,13 @@ exports.login = async (req, res) => {
 
     // Check password
     const isMatch = await user.comparePassword(password);
+    console.log('Password match:', isMatch);
+
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // If everything is valid, send the response
     res.json({
       _id: user._id,
       fullName: user.fullName,

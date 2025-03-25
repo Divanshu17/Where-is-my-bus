@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 import {
   EnvelopeIcon,
   LockClosedIcon,
@@ -14,6 +15,12 @@ import { FcGoogle } from "react-icons/fc";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  // Get the path the user was trying to access before being redirected to login
+  const from = location.state?.from?.pathname || "/location-permission";
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -27,6 +34,34 @@ function Login() {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
+
+    // For development mode with credential validation
+    if (process.env.NODE_ENV === "development") {
+      // Keep the test credentials logic
+      const validCredentials = [
+        { email: "user@example.com", password: "password123" },
+        { email: "test@test.com", password: "test123" },
+        { email: "admin@bus.com", password: "admin123" },
+      ];
+
+      const isValid = validCredentials.some(
+        (cred) =>
+          cred.email === formData.email && cred.password === formData.password
+      );
+
+      if (isValid) {
+        const userData = {
+          fullName: "Test User",
+          email: formData.email,
+          phoneNumber: "1234567890",
+          token: "test-token-123",
+        };
+        login(userData);
+        setIsSubmitting(false);
+        navigate(from);
+        return;
+      }
+    }
 
     // Send login request to backend
     fetch("http://localhost:5000/api/users/login", {
@@ -45,20 +80,17 @@ function Login() {
         return response.json();
       })
       .then((data) => {
-        // Save user data to localStorage
-        localStorage.setItem(
-          "userData",
-          JSON.stringify({
-            fullName: data.fullName,
-            email: data.email,
-            phoneNumber: data.phoneNumber,
-            token: data.token,
-          })
-        );
+        // Use the login function from AuthContext
+        login({
+          _id: data._id,
+          fullName: data.fullName,
+          email: data.email,
+          phoneNumber: data.phoneNumber,
+          token: data.token,
+        });
 
-        // Navigate to next page
         setIsSubmitting(false);
-        navigate("/location-permission");
+        navigate(from);
       })
       .catch((error) => {
         console.error("Login error:", error);
