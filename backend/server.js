@@ -4,6 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const userRoutes = require('./routes/userRoutes');
 const testRoutes = require('./routes/testRoutes');
+const seatRoutes = require('./routes/seatRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -35,6 +37,8 @@ mongoose.connection.on('disconnected', () => {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/test', testRoutes);
+app.use('/api/seats', seatRoutes);
+app.use('/api/tickets', ticketRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

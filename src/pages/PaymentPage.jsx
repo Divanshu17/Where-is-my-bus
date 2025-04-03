@@ -44,8 +44,9 @@ const PaymentPage = () => {
   const [showEmailToast, setShowEmailToast] = useState(false);
   const [emailSendError, setEmailSendError] = useState(null);
   const [autoSendEmail, setAutoSendEmail] = useState(true); // New state for auto-sending email
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get user data from localStorage if available
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("userData"));
     if (userData) {
@@ -69,50 +70,89 @@ const PaymentPage = () => {
     { name: "Mansarover", fare: "₹60" },
   ];
 
-  // Validate email format
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   };
 
-  // Handle form submission
-  const handlePayment = (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
 
-    // Validate email
-    if (!validateEmail(passengerEmail)) {
-      setEmailError("Please enter a valid email address");
+    if (!passengerName || !passengerEmail || !selectedStop) {
+      setError("Please fill in all required fields");
+      setIsSubmitting(false);
       return;
     }
 
-    setEmailError("");
-    setIsProcessing(true);
+    if (!validateEmail(passengerEmail)) {
+      setEmailError("Please enter a valid email address");
+      setIsSubmitting(false);
+      return;
+    }
 
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
+      const selectedStopObj = stops.find((stop) => stop.name === selectedStop);
+      const selectedStopFare = selectedStopObj ? selectedStopObj.fare : "₹0";
+      const source = "JKLU"; 
+      const routeId = "1"; 
 
-      // Create ticket data
-      const newTicket = {
-        ticketId: "TKT" + Math.floor(Math.random() * 1000000),
-        busNumber: "RT-101",
-        route: "JKLU → Mansarover",
-        source: "JKLU",
+      console.log("Booking ticket with data:", {
+        routeId,
+        passengerName,
+        passengerEmail,
+        source,
         destination: selectedStop,
-        departureDate: new Date(Date.now() + 86400000).toISOString(), // tomorrow
+        fare: selectedStopFare,
+      });
+
+      const ticketResponse = await fetch(
+        "http://localhost:5000/api/tickets/book",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            routeId,
+            passengerName,
+            passengerEmail,
+            source,
+            destination: selectedStop,
+            fare: selectedStopFare.replace("₹", ""), 
+          }),
+        }
+      );
+
+      if (!ticketResponse.ok) {
+        const errorData = await ticketResponse.json();
+        throw new Error(errorData.message || "Failed to book ticket");
+      }
+
+      const ticketData = await ticketResponse.json();
+      console.log("Ticket booked successfully:", ticketData);
+
+      const newTicket = {
+        ticketId:
+          ticketData.ticket._id || `TCKT${Math.floor(Math.random() * 10000)}`,
+        busNumber: "RT-101",
+        route: `${source} → ${selectedStop}`,
+        source: source,
+        destination: selectedStop,
+        departureDate: new Date(Date.now() + 86400000).toISOString(),
         departureTime: "10:15 AM",
         arrivalTime: "11:00 AM",
-        seatNumber: "A" + Math.floor(Math.random() * 30 + 1),
+        seatNumber: `A${Math.floor(Math.random() * 30 + 1)}`,
         fare: selectedStopFare,
         passengerName: passengerName,
         passengerEmail: passengerEmail,
         bookingDate: new Date().toISOString(),
         status: "Confirmed",
         paymentMethod: paymentMethod,
-        transactionId: "TXN" + Math.floor(Math.random() * 1000000),
+        transactionId: `TXN${Math.floor(Math.random() * 1000000)}`,
       };
 
-      // Save ticket to localStorage
       const existingTickets = JSON.parse(localStorage.getItem("tickets")) || [];
       const updatedTickets = [newTicket, ...existingTickets];
       localStorage.setItem("tickets", JSON.stringify(updatedTickets));
@@ -120,38 +160,23 @@ const PaymentPage = () => {
       setTicketData(newTicket);
       setIsPaymentSuccessful(true);
 
-      // Generate PDF and send email automatically if enabled
-      setTimeout(() => {
-        const pdfBase64 = generatePDFAndGetBase64(newTicket);
-
-        if (autoSendEmail) {
-          setIsEmailSending(true);
-          setShowEmailToast(true);
-
-          try {
-            sendEmailWithTicket(newTicket, pdfBase64);
-            setIsEmailSent(true);
-            setEmailSendError(null);
-          } catch (error) {
-            setIsEmailSent(false);
-            setEmailSendError(
-              "Failed to send email automatically. You can try sending it manually."
-            );
-          } finally {
-            setIsEmailSending(false);
-            setTimeout(() => setShowEmailToast(false), 5000);
-          }
-        }
-      }, 1000);
-    }, 2000);
+      // Automatically send email if enabled
+      if (autoSendEmail) {
+        sendEmailWithTicket(newTicket, null); // You'll need this function
+      }
+    } catch (error) {
+      console.error("Payment/Booking error:", error);
+      setError(error.message || "Payment failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Generate PDF ticket and return as base64
+  
   const generatePDFAndGetBase64 = (ticket) => {
-    // Create a new PDF document
+    
     const doc = new jsPDF();
 
-    // Set document properties
     doc.setProperties({
       title: `Bus Ticket - ${ticket.ticketId}`,
       subject: `Bus Ticket from ${ticket.source} to ${ticket.destination}`,
@@ -160,9 +185,8 @@ const PaymentPage = () => {
       creator: "BusTracker App",
     });
 
-    // Define colors - simpler color palette
     const primaryColor = [59, 130, 246]; // Blue
-    const primaryColorDark = [37, 99, 235]; // Dark Blue
+    const primaryColorDark = [37, 99, 235]; 
     const secondaryColor = [55, 65, 81]; // Gray
     const accentColor = [245, 158, 11]; // Amber
     const successColor = [39, 174, 96]; // Green
