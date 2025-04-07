@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import useTranslation from "../hooks/useTranslation";
+import LanguageSelector from "../components/LanguageSelector";
 import {
   MapPinIcon,
   ArrowLeftIcon,
@@ -11,6 +13,7 @@ import {
 
 function LocationPermission() {
   const navigate = useNavigate();
+  const t = useTranslation();
   const [permissionState, setPermissionState] = useState("idle"); // idle, loading, success, error
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -87,7 +90,7 @@ function LocationPermission() {
   const benefits = [
     {
       icon: <GlobeAltIcon className="h-5 w-5 text-blue-500" />,
-      title: "Real-time Tracking",
+      title: t.realTimeTracking,
       description: "See buses moving on the map in real-time",
     },
     {
@@ -141,6 +144,16 @@ function LocationPermission() {
         <ArrowLeftIcon className="h-6 w-6 text-gray-800" />
       </motion.button>
 
+      {/* Language Selector */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="absolute top-8 right-8 z-10"
+      >
+        <LanguageSelector />
+      </motion.div>
+
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -162,7 +175,7 @@ function LocationPermission() {
                 <div className="absolute inset-0 bg-blue-100 rounded-full scale-[1.2] blur-md"></div>
                 <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-full">
                   <MapPinIcon className="h-12 w-12 text-white" />
-        </div>
+                </div>
 
                 {/* Animated rings */}
                 <motion.div
@@ -197,12 +210,11 @@ function LocationPermission() {
               variants={itemVariants}
               className="text-3xl font-extrabold text-gray-900 mb-3"
             >
-              Enable Location
+              {t.enableLocation}
             </motion.h2>
 
             <motion.p variants={itemVariants} className="text-gray-600 mb-6">
-              We need your location to show you nearby buses and provide
-              accurate arrival times.
+              {t.locationNeeded}
             </motion.p>
 
             <AnimatePresence mode="wait">
@@ -215,7 +227,7 @@ function LocationPermission() {
                   onClick={handleEnableLocation}
                   className="w-full py-3 text-white text-lg font-semibold rounded-lg shadow-md bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center"
                 >
-                  Enable Location Access
+                  {t.enableLocationAccess}
                 </motion.button>
               )}
 
@@ -238,7 +250,7 @@ function LocationPermission() {
                   >
                     <ArrowPathIcon className="h-8 w-8 text-blue-500" />
                   </motion.div>
-                  <p className="text-gray-600">Requesting location access...</p>
+                  <p className="text-gray-600">{t.loading}</p>
                 </motion.div>
               )}
 
@@ -259,11 +271,9 @@ function LocationPermission() {
                     <ShieldCheckIcon className="h-8 w-8 text-green-500" />
                   </motion.div>
                   <p className="text-green-600 font-medium">
-                    Location access granted!
+                    {t.locationGranted}
                   </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Redirecting you...
-                  </p>
+                  <p className="text-gray-500 text-sm mt-1">{t.redirecting}</p>
                 </motion.div>
               )}
 
@@ -278,11 +288,11 @@ function LocationPermission() {
                   <div className="bg-red-100 p-4 rounded-lg mb-4 text-center">
                     <p className="text-red-600">{errorMessage}</p>
                   </div>
-        <button
+                  <button
                     onClick={resetPermissionState}
                     className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-all"
                   >
-                    Try Again
+                    {t.tryAgain}
                   </button>
                 </motion.div>
               )}
@@ -296,7 +306,7 @@ function LocationPermission() {
           className="bg-white/70 backdrop-blur-sm rounded-xl p-5 shadow-md"
         >
           <h3 className="text-center text-gray-700 font-medium mb-4">
-            Why We Need Your Location
+            {t.whyLocationNeeded}
           </h3>
           <div className="space-y-4">
             {benefits.map((benefit, index) => (

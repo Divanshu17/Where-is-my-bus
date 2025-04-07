@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import useTranslation from "../hooks/useTranslation";
 import {
   ArrowLeftIcon,
   Bars3Icon,
@@ -17,7 +18,8 @@ import SideNavBar from "./components/SideNavBar";
 function FeedbackPage() {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+  const t = useTranslation();
+
   // Get user details from localStorage (Saved from SignUp page)
   const [userDetails, setUserDetails] = useState({
     name: "Divanshu",
@@ -44,32 +46,32 @@ function FeedbackPage() {
   const [selectedCategory, setSelectedCategory] = useState("bus_service");
 
   const emojis = [
-    { id: 1, icon: "😡", label: "Terrible" },
-    { id: 2, icon: "😞", label: "Poor" },
-    { id: 3, icon: "😐", label: "Okay" },
-    { id: 4, icon: "😊", label: "Good" },
-    { id: 5, icon: "😎", label: "Excellent" },
+    { id: 1, icon: "😡", label: t.terrible },
+    { id: 2, icon: "😞", label: t.poor },
+    { id: 3, icon: "😐", label: t.okay },
+    { id: 4, icon: "😊", label: t.good },
+    { id: 5, icon: "😎", label: t.excellent },
   ];
 
   const categories = [
     {
       id: "bus_service",
-      label: "Bus Service",
+      label: t.busService,
       icon: <TruckIcon className="h-5 w-5" />,
     },
     {
       id: "app_experience",
-      label: "App Experience",
+      label: t.appExperience,
       icon: <UserIcon className="h-5 w-5" />,
     },
     {
       id: "driver_behavior",
-      label: "Driver Behavior",
+      label: t.driverBehavior,
       icon: <UserIcon className="h-5 w-5" />,
     },
     {
       id: "route_timing",
-      label: "Route & Timing",
+      label: t.routeTiming,
       icon: <ArrowLeftIcon className="h-5 w-5" />,
     },
   ];
@@ -152,7 +154,7 @@ function FeedbackPage() {
           </button>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
             <ChatBubbleBottomCenterTextIcon className="h-6 w-6 mr-2 text-blue-600" />
-            Feedback
+            {t.feedback}
           </h2>
           <button
             onClick={() => navigate(-1)}
@@ -177,7 +179,7 @@ function FeedbackPage() {
           >
             <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg shadow-lg flex items-center">
               <CheckCircleIcon className="h-5 w-5 mr-2" />
-              Thank you for your feedback!
+              {t.feedbackSubmitted}
             </div>
           </motion.div>
         )}
@@ -198,7 +200,7 @@ function FeedbackPage() {
           >
             <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
               <ChatBubbleBottomCenterTextIcon className="h-5 w-5 mr-2 text-blue-600" />
-              Share Your Experience
+              {t.shareExperience}
             </h3>
 
             {/* User Information */}
@@ -206,30 +208,30 @@ function FeedbackPage() {
               {/* Name */}
               <motion.div variants={itemVariants} className="relative">
                 <label className="block text-sm font-medium text-gray-800 mb-1">
-                  Your Name
+                  {t.yourName}
                 </label>
                 <div className="relative">
                   <UserIcon className="h-5 w-5 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            <input
-              type="text"
-              value={userDetails.name}
-              disabled
+                  <input
+                    type="text"
+                    value={userDetails.name}
+                    disabled
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 font-medium focus:outline-none"
-            />
-          </div>
+                  />
+                </div>
               </motion.div>
 
-        {/* Email */}
+              {/* Email */}
               <motion.div variants={itemVariants} className="relative">
                 <label className="block text-sm font-medium text-gray-800 mb-1">
-                  Email Address
+                  {t.email}
                 </label>
                 <div className="relative">
                   <EnvelopeIcon className="h-5 w-5 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input
-            type="email"
-            value={userDetails.email}
-            disabled
+                  <input
+                    type="email"
+                    value={userDetails.email}
+                    disabled
                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-800 font-medium focus:outline-none"
                   />
                 </div>
@@ -238,7 +240,7 @@ function FeedbackPage() {
               {/* Phone */}
               <motion.div variants={itemVariants} className="relative">
                 <label className="block text-sm font-medium text-gray-800 mb-1">
-                  Contact Number
+                  {t.contactNumber}
                 </label>
                 <div className="relative">
                   <PhoneIcon className="h-5 w-5 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2" />
@@ -250,18 +252,18 @@ function FeedbackPage() {
                   />
                 </div>
               </motion.div>
-        </div>
+            </div>
 
             {/* Feedback Category - improved contrast */}
             <motion.div variants={itemVariants} className="mb-6">
               <label className="block text-sm font-medium text-gray-800 mb-2">
-                What are you giving feedback about?
-          </label>
+                {t.feedbackCategory}
+              </label>
               <div className="grid grid-cols-2 gap-3">
                 {categories.map((category) => (
-                <button
+                  <button
                     key={category.id}
-                  type="button"
+                    type="button"
                     onClick={() => setSelectedCategory(category.id)}
                     className={`flex items-center justify-center p-3 rounded-lg border-2 transition-all ${
                       selectedCategory === category.id
@@ -283,7 +285,7 @@ function FeedbackPage() {
                         {category.label}
                       </span>
                     </div>
-                </button>
+                  </button>
                 ))}
               </div>
             </motion.div>
@@ -291,7 +293,7 @@ function FeedbackPage() {
             {/* Rating Section - improved contrast */}
             <motion.div variants={itemVariants} className="mb-6">
               <label className="block text-sm font-medium text-gray-800 mb-2">
-                How would you rate your experience?
+                {t.rateExperience}
               </label>
               <div className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-300">
                 {emojis.map((emoji, index) => (
@@ -330,24 +332,24 @@ function FeedbackPage() {
                     </span>
                   </motion.button>
                 ))}
-        </div>
+              </div>
 
               {/* Slider for rating - improved styling */}
               <div className="mt-4 px-2">
-        <input
-          type="range"
-          min="1"
-          max="5"
-          value={rating}
-          onChange={(e) => setRating(parseInt(e.target.value))}
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={rating}
+                  onChange={(e) => setRating(parseInt(e.target.value))}
                   className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <div className="flex justify-between mt-1 text-xs text-gray-600 px-1">
-                  <span>Terrible</span>
-                  <span>Poor</span>
-                  <span>Okay</span>
-                  <span>Good</span>
-                  <span>Excellent</span>
+                  <span>{t.terrible}</span>
+                  <span>{t.poor}</span>
+                  <span>{t.okay}</span>
+                  <span>{t.good}</span>
+                  <span>{t.excellent}</span>
                 </div>
               </div>
             </motion.div>
@@ -355,12 +357,12 @@ function FeedbackPage() {
             {/* Comment Box - improved contrast */}
             <motion.div variants={itemVariants} className="mb-6">
               <label className="block text-sm font-medium text-gray-800 mb-2">
-                Additional Comments
+                {t.additionalComments}
               </label>
-        <textarea
-                placeholder="Tell us more about your experience..."
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
+              <textarea
+                placeholder={t.commentPlaceholder}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all h-32 resize-none text-gray-800"
               />
             </motion.div>
@@ -370,7 +372,7 @@ function FeedbackPage() {
               variants={itemVariants}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-          type="submit"
+              type="submit"
               disabled={isSubmitting || isSubmitted}
               className={`w-full py-3.5 rounded-xl font-bold shadow-md flex items-center justify-center space-x-2 transition-all ${
                 isSubmitted
@@ -402,17 +404,17 @@ function FeedbackPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <span>Submitting...</span>
+                  <span>{t.loading}</span>
                 </>
               ) : isSubmitted ? (
                 <>
                   <CheckCircleIcon className="h-5 w-5" />
-                  <span>Feedback Submitted</span>
+                  <span>{t.feedbackSubmitted}</span>
                 </>
               ) : (
                 <>
                   <PaperAirplaneIcon className="h-5 w-5" />
-                  <span>Submit Feedback</span>
+                  <span>{t.submitFeedback}</span>
                 </>
               )}
             </motion.button>
@@ -423,7 +425,7 @@ function FeedbackPage() {
             variants={itemVariants}
             className="text-center mt-6 text-gray-700 text-sm font-medium"
           >
-            Thank you for helping us improve our service!
+            {t.thankYou}
           </motion.div>
         </motion.div>
       </div>

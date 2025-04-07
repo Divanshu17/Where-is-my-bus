@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import useTranslation from "../hooks/useTranslation";
+import LanguageSelector from "../components/LanguageSelector";
 import {
   UserIcon,
   TruckIcon,
@@ -12,6 +14,7 @@ import {
 
 function SignInSelection() {
   const navigate = useNavigate();
+  const t = useTranslation();
   const [hoveredRole, setHoveredRole] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [showFeatures, setShowFeatures] = useState(false);
@@ -49,9 +52,9 @@ function SignInSelection() {
   };
 
   const features = [
-    { icon: <MapIcon className="h-5 w-5" />, text: "Real-time tracking" },
-    { icon: <ClockIcon className="h-5 w-5" />, text: "ETA updates" },
-    { icon: <BellIcon className="h-5 w-5" />, text: "Notifications" },
+    { icon: <MapIcon className="h-5 w-5" />, text: t.realTimeTracking },
+    { icon: <ClockIcon className="h-5 w-5" />, text: t.etaUpdates },
+    { icon: <BellIcon className="h-5 w-5" />, text: t.notifications },
   ];
 
   return (
@@ -98,6 +101,16 @@ function SignInSelection() {
         <ArrowLeftIcon className="h-6 w-6 text-gray-800" />
       </motion.button>
 
+      {/* Language Selector */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="absolute top-8 right-8 z-10"
+      >
+        <LanguageSelector />
+      </motion.div>
+
       <motion.div
         initial="hidden"
         animate="visible"
@@ -127,11 +140,9 @@ function SignInSelection() {
             </motion.div>
           </motion.div>
           <h2 className="text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
-            Welcome to <span className="text-blue-600">BusTracker</span>
+            {t.welcome}
           </h2>
-          <p className="text-gray-600 text-lg">
-            Choose your role to continue your journey
-          </p>
+          <p className="text-gray-600 text-lg">{t.chooseRole}</p>
         </motion.div>
 
         <motion.div
@@ -159,11 +170,9 @@ function SignInSelection() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-white mb-1">
-                      Passenger
+                      {t.passenger}
                     </h3>
-                    <p className="text-blue-100">
-                      Track buses and plan your journey
-                    </p>
+                    <p className="text-blue-100">{t.passengerDesc}</p>
                   </div>
                   <motion.div
                     animate={{
@@ -196,11 +205,9 @@ function SignInSelection() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-xl font-bold text-white mb-1">
-                      Driver
+                      {t.driver}
                     </h3>
-                    <p className="text-amber-100">
-                      Manage your route and passengers
-                    </p>
+                    <p className="text-amber-100">{t.driverDesc}</p>
                   </div>
                   <motion.div
                     animate={{
@@ -219,14 +226,14 @@ function SignInSelection() {
 
         <AnimatePresence>
           {showFeatures && (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
               className="bg-white/70 backdrop-blur-sm rounded-xl p-4 mb-6 shadow-md"
             >
               <h3 className="text-center text-gray-700 font-medium mb-3">
-                Key Features
+                {t.keyFeatures}
               </h3>
               <div className="flex justify-around">
                 {features.map((feature, index) => (
@@ -252,13 +259,13 @@ function SignInSelection() {
 
         <motion.div variants={itemVariants} className="text-center">
           <p className="text-gray-600">
-            Don't have an account?{" "}
-          <button
+            {t.dontHaveAccount}{" "}
+            <button
               onClick={() => navigate("/signup")}
               className="text-blue-600 font-medium hover:underline transition-all"
-          >
-              Sign up
-          </button>
+            >
+              {t.signup}
+            </button>
           </p>
         </motion.div>
       </motion.div>

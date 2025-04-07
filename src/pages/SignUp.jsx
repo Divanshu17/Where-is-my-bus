@@ -13,9 +13,11 @@ import {
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import { FcGoogle } from "react-icons/fc";
+import { useAuth } from "../context/AuthContext";
 
 function SignUp() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -27,6 +29,7 @@ function SignUp() {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Initialize Google OAuth on component mount
   useEffect(() => {
@@ -163,16 +166,19 @@ function SignUp() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError("");
 
-    // Validate form data
-    const errors = validateStep(currentStep);
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+    // Basic validation before sending to API
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
       setIsSubmitting(false);
       return;
     }
 
-    // Send data to backend API
+    console.log("Sending signup data:", formData);
+
+    // Send signup request to backend
+    console.log("About to send fetch request to backend");
     fetch("http://localhost:5000/api/users/signup", {
       method: "POST",
       headers: {
@@ -181,32 +187,32 @@ function SignUp() {
       body: JSON.stringify(formData),
     })
       .then((response) => {
+        console.log("Received response from backend:", response.status);
         if (!response.ok) {
           return response.json().then((data) => {
-            throw new Error(data.message || "Something went wrong!");
+            console.error("Signup response error:", data);
+            throw new Error(data.message || "Error creating account");
           });
         }
+        console.log("Response is OK, parsing JSON");
         return response.json();
       })
       .then((data) => {
-        // Save user data to localStorage
-        localStorage.setItem(
-          "userData",
-          JSON.stringify({
-            fullName: data.fullName,
-            email: data.email,
-            phoneNumber: data.phoneNumber,
-            token: data.token,
-          })
-        );
+        console.log("Signup successful:", data);
+        // Use the login function from AuthContext
+        login({
+          fullName: data.fullName,
+          email: data.email,
+          phoneNumber: data.phoneNumber,
+          token: data.token,
+        });
 
-        // Navigate to next page
         setIsSubmitting(false);
         navigate("/location-permission");
       })
       .catch((error) => {
         console.error("Signup error:", error);
-        setFormErrors({ submit: error.message });
+        setError(error.message);
         setIsSubmitting(false);
       });
   };

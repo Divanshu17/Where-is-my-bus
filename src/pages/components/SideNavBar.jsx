@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
 import {
   XMarkIcon,
   HomeIcon,
@@ -28,6 +29,7 @@ import logo from "../../assets/Logo2.png";
 const SideNavBar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, currentUser } = useAuth();
   const [activeRoute, setActiveRoute] = useState("");
   const [userProfile, setUserProfile] = useState({
     name: "User",
@@ -37,25 +39,24 @@ const SideNavBar = ({ isOpen, setIsOpen }) => {
   const [avatarColor, setAvatarColor] = useState("#3B82F6");
 
   useEffect(() => {
-    // Load user data from localStorage
-    const userData = JSON.parse(localStorage.getItem("userData"));
-    if (userData) {
+    // Set user profile from auth context
+    if (currentUser) {
       setUserProfile({
-        name: userData.fullName || "User",
-        email: userData.email || "user@example.com",
-        avatar: userData.profileImage || null,
+        name: currentUser.fullName || "User",
+        email: currentUser.email || "user@example.com",
+        avatar: currentUser.profileImage || null,
       });
 
       // Generate avatar color based on name
-      if (userData.fullName) {
-        const hash = userData.fullName.split("").reduce((acc, char) => {
+      if (currentUser.fullName) {
+        const hash = currentUser.fullName.split("").reduce((acc, char) => {
           return char.charCodeAt(0) + ((acc << 5) - acc);
         }, 0);
         const hue = Math.abs(hash % 360);
         setAvatarColor(`hsl(${hue}, 70%, 50%)`);
       }
     }
-  }, [isOpen]); // Reload when sidebar opens to get latest data
+  }, [currentUser, isOpen]); // Reload when sidebar opens or user changes
 
   useEffect(() => {
     // Set active route based on current path
@@ -67,6 +68,12 @@ const SideNavBar = ({ isOpen, setIsOpen }) => {
     else if (path.includes("/feedback")) setActiveRoute("feedback");
     else if (path.includes("/contact")) setActiveRoute("contact");
   }, [location]);
+
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
+    navigate("/login");
+  };
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -348,10 +355,7 @@ const SideNavBar = ({ isOpen, setIsOpen }) => {
           className="p-4 border-t border-[#c4b393]"
         >
           <button
-            onClick={() => {
-              navigate("/login");
-              setIsOpen(false);
-            }}
+            onClick={handleLogout}
             className="w-full py-3 px-4 bg-white/80 hover:bg-white text-gray-800 font-semibold rounded-xl transition-all flex items-center justify-center space-x-2 shadow-sm"
           >
             <ArrowRightOnRectangleIcon className="h-5 w-5 text-gray-700" />
