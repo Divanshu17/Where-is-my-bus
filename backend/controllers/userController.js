@@ -13,8 +13,9 @@ const generateToken = (userId) => {
 // @access  Public
 exports.signup = async (req, res) => {
   try {
+    console.log('Signup request received with body:', req.body);
     const { fullName, email, password, phoneNumber } = req.body;
-    console.log('Signup attempt:', { fullName, email, phoneNumber });
+    console.log('Signup attempt with parsed data:', { fullName, email, phoneNumber });
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -24,6 +25,7 @@ exports.signup = async (req, res) => {
     }
 
     // Create new user
+    console.log('Attempting to create user with data:', { fullName, email, phoneNumber });
     const user = await User.create({
       fullName,
       email,
@@ -33,6 +35,7 @@ exports.signup = async (req, res) => {
 
     if (user) {
       console.log('User created successfully:', user._id);
+      console.log('User details:', JSON.stringify(user));
       res.status(201).json({
         _id: user._id,
         fullName: user.fullName,
@@ -41,26 +44,34 @@ exports.signup = async (req, res) => {
         profileImage: user.profileImage,
         token: generateToken(user._id)
       });
+    } else {
+      console.log('User creation failed but no error was thrown');
+      res.status(500).json({ message: 'Failed to create user' });
     }
   } catch (error) {
     console.error('Signup error details:', error);
+    console.error('Error stack:', error.stack);
+
     if (error.name === 'ValidationError') {
       // Handle mongoose validation errors
       const messages = Object.values(error.errors).map(val => val.message);
-      return res.status(400).json({ 
-        message: 'Validation error', 
-        errors: messages 
+      console.log('Validation error messages:', messages);
+      return res.status(400).json({
+        message: 'Validation error',
+        errors: messages
       });
     }
     if (error.code === 11000) {
       // Handle duplicate key error (usually email)
-      return res.status(400).json({ 
-        message: 'Email is already registered' 
+      console.log('Duplicate key error (email already exists)');
+      return res.status(400).json({
+        message: 'Email is already registered'
       });
     }
-    res.status(500).json({ 
+    console.error('Unhandled error during signup:', error.message);
+    res.status(500).json({
       message: 'Error creating user',
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -81,7 +92,7 @@ exports.login = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     console.log('User found:', user ? 'Yes' : 'No');
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -105,9 +116,9 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Error logging in',
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -118,7 +129,7 @@ exports.login = async (req, res) => {
 exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    
+
     if (user) {
       res.json({
         _id: user._id,
@@ -132,9 +143,9 @@ exports.getUserProfile = async (req, res) => {
     }
   } catch (error) {
     console.error('Get profile error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Error retrieving user profile',
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -145,24 +156,24 @@ exports.getUserProfile = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    
+
     if (user) {
       user.fullName = req.body.fullName || user.fullName;
       user.email = req.body.email || user.email;
       user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
-      
+
       // Only update password if provided
       if (req.body.password) {
         user.password = req.body.password;
       }
-      
+
       // Update profile image if provided
       if (req.body.profileImage) {
         user.profileImage = req.body.profileImage;
       }
-      
+
       const updatedUser = await user.save();
-      
+
       res.json({
         _id: updatedUser._id,
         fullName: updatedUser.fullName,
@@ -176,9 +187,9 @@ exports.updateUserProfile = async (req, res) => {
     }
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Error updating user profile',
-      error: error.message 
+      error: error.message
     });
   }
-}; 
+};

@@ -95,8 +95,14 @@ const PaymentPage = () => {
     try {
       const selectedStopObj = stops.find((stop) => stop.name === selectedStop);
       const selectedStopFare = selectedStopObj ? selectedStopObj.fare : "₹0";
-      const source = "JKLU"; 
-      const routeId = "1"; 
+      const source = "JKLU";
+
+      // Get the routeId from location state or URL parameters
+      // If not available, default to the route from the previous page
+      const routeId =
+        location.state?.routeId ||
+        new URLSearchParams(location.search).get("routeId") ||
+        "1";
 
       console.log("Booking ticket with data:", {
         routeId,
@@ -120,7 +126,7 @@ const PaymentPage = () => {
             passengerEmail,
             source,
             destination: selectedStop,
-            fare: selectedStopFare.replace("₹", ""), 
+            fare: selectedStopFare.replace("₹", ""),
           }),
         }
       );
@@ -172,9 +178,7 @@ const PaymentPage = () => {
     }
   };
 
-  
   const generatePDFAndGetBase64 = (ticket) => {
-    
     const doc = new jsPDF();
 
     doc.setProperties({
@@ -186,7 +190,7 @@ const PaymentPage = () => {
     });
 
     const primaryColor = [59, 130, 246]; // Blue
-    const primaryColorDark = [37, 99, 235]; 
+    const primaryColorDark = [37, 99, 235];
     const secondaryColor = [55, 65, 81]; // Gray
     const accentColor = [245, 158, 11]; // Amber
     const successColor = [39, 174, 96]; // Green

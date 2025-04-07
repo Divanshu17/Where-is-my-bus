@@ -161,7 +161,8 @@ const RouteDetailsPage = () => {
 
   // Function to handle "Buy Ticket" button click
   const handleBuyTicket = () => {
-    navigate("/payment"); // Navigate to the payment page
+    // Navigate to the payment page with the routeId
+    navigate(`/payment?routeId=${routeId}`, { state: { routeId } });
   };
 
   // Add this state

@@ -168,47 +168,17 @@ function SignUp() {
     setIsSubmitting(true);
     setError("");
 
-    // For demo purposes with basic validation
-    if (process.env.NODE_ENV === "development") {
-      // Check if email is already "registered" (for demo purposes)
-      const existingEmails = [
-        "user@example.com",
-        "test@test.com",
-        "admin@bus.com",
-      ];
-
-      if (existingEmails.includes(formData.email)) {
-        setError("Email already exists. Please use a different email.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Validate password strength
-      if (formData.password.length < 8) {
-        setError("Password must be at least 8 characters long");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // If validation passes, create user
-      const userData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        token: "test-token-123",
-      };
-
-      // Use the login function from AuthContext
-      login(userData);
-
+    // Basic validation before sending to API
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
       setIsSubmitting(false);
-      navigate("/location-permission");
       return;
     }
 
     console.log("Sending signup data:", formData);
 
     // Send signup request to backend
+    console.log("About to send fetch request to backend");
     fetch("http://localhost:5000/api/users/signup", {
       method: "POST",
       headers: {
@@ -217,12 +187,14 @@ function SignUp() {
       body: JSON.stringify(formData),
     })
       .then((response) => {
+        console.log("Received response from backend:", response.status);
         if (!response.ok) {
           return response.json().then((data) => {
             console.error("Signup response error:", data);
             throw new Error(data.message || "Error creating account");
           });
         }
+        console.log("Response is OK, parsing JSON");
         return response.json();
       })
       .then((data) => {
