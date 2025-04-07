@@ -159,11 +159,6 @@ function DriverLogin() {
         </p>
 
         {/* Test credentials hint */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-          <p className="text-sm text-blue-700 font-medium">Test Credentials:</p>
-          <p className="text-sm text-blue-600">Email: driver@gmail.com</p>
-          <p className="text-sm text-blue-600">Password: 17042004</p>
-        </div>
       </motion.div>
     </div>
   );

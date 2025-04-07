@@ -14,6 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "../context/AuthContext";
+import { getApiUrl, ENDPOINTS } from "../config/api";
 
 function SignUp() {
   const navigate = useNavigate();
@@ -179,7 +180,7 @@ function SignUp() {
 
     // Send signup request to backend
     console.log("About to send fetch request to backend");
-    fetch("http://localhost:5000/api/users/signup", {
+    fetch(getApiUrl(ENDPOINTS.SIGNUP), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

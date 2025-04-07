@@ -10,6 +10,7 @@ import {
   EyeSlashIcon,
 } from "@heroicons/react/24/outline";
 import { FcGoogle } from "react-icons/fc";
+import { getApiUrl, ENDPOINTS } from "../config/api";
 
 // navigate('/location-permission');
 
@@ -64,7 +65,7 @@ function Login() {
     }
 
     // Send login request to backend
-    fetch("http://localhost:5000/api/users/login", {
+    fetch(getApiUrl(ENDPOINTS.LOGIN), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
