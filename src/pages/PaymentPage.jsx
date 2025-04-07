@@ -44,8 +44,9 @@ const PaymentPage = () => {
   const [showEmailToast, setShowEmailToast] = useState(false);
   const [emailSendError, setEmailSendError] = useState(null);
   const [autoSendEmail, setAutoSendEmail] = useState(true); // New state for auto-sending email
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get user data from localStorage if available
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("userData"));
     if (userData) {
@@ -69,50 +70,95 @@ const PaymentPage = () => {
     { name: "Mansarover", fare: "₹60" },
   ];
 
-  // Validate email format
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
   };
 
-  // Handle form submission
-  const handlePayment = (e) => {
+  const handlePayment = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
 
-    // Validate email
-    if (!validateEmail(passengerEmail)) {
-      setEmailError("Please enter a valid email address");
+    if (!passengerName || !passengerEmail || !selectedStop) {
+      setError("Please fill in all required fields");
+      setIsSubmitting(false);
       return;
     }
 
-    setEmailError("");
-    setIsProcessing(true);
+    if (!validateEmail(passengerEmail)) {
+      setEmailError("Please enter a valid email address");
+      setIsSubmitting(false);
+      return;
+    }
 
-    // Simulate payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
+      const selectedStopObj = stops.find((stop) => stop.name === selectedStop);
+      const selectedStopFare = selectedStopObj ? selectedStopObj.fare : "₹0";
+      const source = "JKLU";
 
-      // Create ticket data
-      const newTicket = {
-        ticketId: "TKT" + Math.floor(Math.random() * 1000000),
-        busNumber: "RT-101",
-        route: "JKLU → Mansarover",
-        source: "JKLU",
+      // Get the routeId from location state or URL parameters
+      // If not available, default to the route from the previous page
+      const routeId =
+        location.state?.routeId ||
+        new URLSearchParams(location.search).get("routeId") ||
+        "1";
+
+      console.log("Booking ticket with data:", {
+        routeId,
+        passengerName,
+        passengerEmail,
+        source,
         destination: selectedStop,
-        departureDate: new Date(Date.now() + 86400000).toISOString(), // tomorrow
+        fare: selectedStopFare,
+      });
+
+      const ticketResponse = await fetch(
+        "http://localhost:5000/api/tickets/book",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            routeId,
+            passengerName,
+            passengerEmail,
+            source,
+            destination: selectedStop,
+            fare: selectedStopFare.replace("₹", ""),
+          }),
+        }
+      );
+
+      if (!ticketResponse.ok) {
+        const errorData = await ticketResponse.json();
+        throw new Error(errorData.message || "Failed to book ticket");
+      }
+
+      const ticketData = await ticketResponse.json();
+      console.log("Ticket booked successfully:", ticketData);
+
+      const newTicket = {
+        ticketId:
+          ticketData.ticket._id || `TCKT${Math.floor(Math.random() * 10000)}`,
+        busNumber: "RT-101",
+        route: `${source} → ${selectedStop}`,
+        source: source,
+        destination: selectedStop,
+        departureDate: new Date(Date.now() + 86400000).toISOString(),
         departureTime: "10:15 AM",
         arrivalTime: "11:00 AM",
-        seatNumber: "A" + Math.floor(Math.random() * 30 + 1),
+        seatNumber: `A${Math.floor(Math.random() * 30 + 1)}`,
         fare: selectedStopFare,
         passengerName: passengerName,
         passengerEmail: passengerEmail,
         bookingDate: new Date().toISOString(),
         status: "Confirmed",
         paymentMethod: paymentMethod,
-        transactionId: "TXN" + Math.floor(Math.random() * 1000000),
+        transactionId: `TXN${Math.floor(Math.random() * 1000000)}`,
       };
 
-      // Save ticket to localStorage
       const existingTickets = JSON.parse(localStorage.getItem("tickets")) || [];
       const updatedTickets = [newTicket, ...existingTickets];
       localStorage.setItem("tickets", JSON.stringify(updatedTickets));
@@ -120,38 +166,21 @@ const PaymentPage = () => {
       setTicketData(newTicket);
       setIsPaymentSuccessful(true);
 
-      // Generate PDF and send email automatically if enabled
-      setTimeout(() => {
-        const pdfBase64 = generatePDFAndGetBase64(newTicket);
-
-        if (autoSendEmail) {
-          setIsEmailSending(true);
-          setShowEmailToast(true);
-
-          try {
-            sendEmailWithTicket(newTicket, pdfBase64);
-            setIsEmailSent(true);
-            setEmailSendError(null);
-          } catch (error) {
-            setIsEmailSent(false);
-            setEmailSendError(
-              "Failed to send email automatically. You can try sending it manually."
-            );
-          } finally {
-            setIsEmailSending(false);
-            setTimeout(() => setShowEmailToast(false), 5000);
-          }
-        }
-      }, 1000);
-    }, 2000);
+      // Automatically send email if enabled
+      if (autoSendEmail) {
+        sendEmailWithTicket(newTicket, null); // You'll need this function
+      }
+    } catch (error) {
+      console.error("Payment/Booking error:", error);
+      setError(error.message || "Payment failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Generate PDF ticket and return as base64
   const generatePDFAndGetBase64 = (ticket) => {
-    // Create a new PDF document
     const doc = new jsPDF();
 
-    // Set document properties
     doc.setProperties({
       title: `Bus Ticket - ${ticket.ticketId}`,
       subject: `Bus Ticket from ${ticket.source} to ${ticket.destination}`,
@@ -160,84 +189,287 @@ const PaymentPage = () => {
       creator: "BusTracker App",
     });
 
-    // Define colors
     const primaryColor = [59, 130, 246]; // Blue
+    const primaryColorDark = [37, 99, 235];
     const secondaryColor = [55, 65, 81]; // Gray
     const accentColor = [245, 158, 11]; // Amber
+    const successColor = [39, 174, 96]; // Green
+    const lightGray = [240, 240, 240]; // Light Gray for backgrounds
 
-    // Add background pattern
-    doc.setDrawColor(240, 240, 240);
-    doc.setFillColor(250, 250, 250);
-    for (let i = 0; i < 21; i++) {
-      for (let j = 0; j < 30; j++) {
-        if ((i + j) % 2 === 0) {
-          doc.rect(i * 10, j * 10, 10, 10, "F");
-        }
-      }
-    }
+    // Clean white background
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, 210, 297, "F");
 
-    // Add header with logo background
-    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    // Simple blue header
+    doc.setFillColor(...primaryColor);
     doc.rect(0, 0, 210, 40, "F");
 
-    // Add ticket title
+    // Add title
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
-    doc.text("BUS TICKET", 105, 20, { align: "center" });
+    doc.text("BUS TICKET", 105, 25, { align: "center" });
 
-    // Add ticket subtitle
-    doc.setFontSize(12);
-    doc.text("Your journey is confirmed", 105, 30, { align: "center" });
-
-    // Add ticket status banner
-    doc.setFillColor(39, 174, 96); // Green for confirmed
+    // Add status banner
+    doc.setFillColor(...successColor);
     doc.rect(0, 40, 210, 12, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.text(
       `STATUS: ${ticket.status.toUpperCase()} • TICKET ID: ${ticket.ticketId}`,
       105,
-      47,
+      48,
       { align: "center" }
     );
 
-    // Add QR code placeholder (in a real app, generate an actual QR code)
+    // Main content area with clear sections
+    const contentStartY = 60;
+    const leftColX = 20;
+    const rightColX = 115;
+    let currentY = contentStartY;
+
+    // QR CODE SECTION - Right side
+    const qrSize = 70;
+    const qrX = rightColX + 10;
+    const qrY = contentStartY + 5;
+
+    // QR code container
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(rightColX, contentStartY, 80, 95, 3, 3, "F");
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(rightColX, contentStartY, 80, 95, 3, 3, "S");
+
+    // QR code with border
     doc.setFillColor(255, 255, 255);
-    doc.roundedRect(145, 60, 50, 50, 3, 3, "F");
-    doc.setDrawColor(220, 220, 220);
-    doc.roundedRect(145, 60, 50, 50, 3, 3, "S");
-    doc.addImage(qrCodeDataUrl, 145, 60, 50, 50);
+    doc.roundedRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 10, 2, 2, "F");
+    doc.setDrawColor(200, 200, 200);
+    doc.roundedRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 10, 2, 2, "S");
 
-    // Add ticket details
+    // Draw a simple QR code pattern
+    doc.setFillColor(0, 0, 0);
+
+    // Position markers
+    doc.rect(qrX, qrY, 10, 10, "F");
+    doc.rect(qrX + qrSize - 10, qrY, 10, 10, "F");
+    doc.rect(qrX, qrY + qrSize - 10, 10, 10, "F");
+
+    // White squares inside position markers
+    doc.setFillColor(255, 255, 255);
+    doc.rect(qrX + 2, qrY + 2, 6, 6, "F");
+    doc.rect(qrX + qrSize - 8, qrY + 2, 6, 6, "F");
+    doc.rect(qrX + 2, qrY + qrSize - 8, 6, 6, "F");
+
+    // Inner black squares
+    doc.setFillColor(0, 0, 0);
+    doc.rect(qrX + 3, qrY + 3, 4, 4, "F");
+    doc.rect(qrX + qrSize - 7, qrY + 3, 4, 4, "F");
+    doc.rect(qrX + 3, qrY + qrSize - 7, 4, 4, "F");
+
+    // QR code data pattern
+    doc.setFillColor(0, 0, 0);
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        if (Math.random() > 0.5) {
+          const x = qrX + 15 + i * 4;
+          const y = qrY + 15 + j * 4;
+          doc.rect(x, y, 3, 3, "F");
+        }
+      }
+    }
+
+    // JOURNEY DETAILS SECTION - Left side
+    // Section container with light background
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(leftColX, contentStartY, 85, 95, 3, 3, "F");
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(leftColX, contentStartY, 85, 95, 3, 3, "S");
+
+    // Section title
+    doc.setTextColor(...primaryColorDark);
     doc.setFontSize(12);
-    doc.text(`Bus Number: ${ticket.busNumber}`, 10, 60);
-    doc.text(`Route: ${ticket.route}`, 10, 70);
-    doc.text(`Source: ${ticket.source}`, 10, 80);
-    doc.text(`Destination: ${ticket.destination}`, 10, 90);
-    doc.text(
-      `Departure Date: ${new Date(ticket.departureDate).toLocaleString()}`,
-      10,
-      100
-    );
-    doc.text(`Departure Time: ${ticket.departureTime}`, 10, 110);
-    doc.text(`Arrival Time: ${ticket.arrivalTime}`, 10, 120);
-    doc.text(`Seat Number: ${ticket.seatNumber}`, 10, 130);
-    doc.text(`Fare: ${ticket.fare}`, 10, 140);
-    doc.text(`Passenger Name: ${ticket.passengerName}`, 10, 150);
-    doc.text(`Passenger Email: ${ticket.passengerEmail}`, 10, 160);
-    doc.text(
-      `Booking Date: ${new Date(ticket.bookingDate).toLocaleString()}`,
-      10,
-      170
-    );
-    doc.text(`Status: ${ticket.status}`, 10, 180);
-    doc.text(`Payment Method: ${ticket.paymentMethod}`, 10, 190);
-    doc.text(`Transaction ID: ${ticket.transactionId}`, 10, 200);
+    doc.setFont("helvetica", "bold");
+    doc.text("JOURNEY DETAILS", leftColX + 5, contentStartY + 10);
 
-    // Add footer
+    // Add journey details in clean, readable format
+    let detailY = contentStartY + 20;
+    const addDetail = (label, value, y) => {
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(label, leftColX + 5, y);
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(value, leftColX + 5, y + 5);
+    };
+
+    addDetail("Bus Number:", ticket.busNumber, detailY);
+    detailY += 15;
+    addDetail("Route:", ticket.route, detailY);
+    detailY += 15;
+    addDetail(
+      "Date:",
+      new Date(ticket.departureDate).toLocaleDateString(),
+      detailY
+    );
+    detailY += 15;
+    addDetail("Departure:", ticket.departureTime, detailY);
+    detailY += 15;
+    addDetail("Est. Arrival:", ticket.arrivalTime || "11:00 AM", detailY);
+
+    // PASSENGER DETAILS SECTION - Full width
+    currentY = contentStartY + 105;
+
+    // Section container
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(leftColX, currentY, 175, 50, 3, 3, "F");
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(leftColX, currentY, 175, 50, 3, 3, "S");
+
+    // Section title
+    doc.setTextColor(...primaryColorDark);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("PASSENGER DETAILS", leftColX + 5, currentY + 10);
+
+    // Passenger details in two columns
+    const leftColPassX = leftColX + 5;
+    const rightColPassX = leftColX + 90;
+    const passDetailY = currentY + 20;
+
+    // Left column
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Name:", leftColPassX, passDetailY);
+    doc.text("Email:", leftColPassX, passDetailY + 15);
+
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
-    doc.text("Thank you for choosing our service!", 105, 220, {
+    doc.setFont("helvetica", "bold");
+    doc.text(ticket.passengerName, leftColPassX, passDetailY + 5);
+    doc.text(ticket.passengerEmail, leftColPassX, passDetailY + 20);
+
+    // Right column
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Seat Number:", rightColPassX, passDetailY);
+    doc.text("Fare:", rightColPassX, passDetailY + 15);
+
+    // Highlighted seat number
+    doc.setFillColor(...primaryColor);
+    doc.roundedRect(rightColPassX, passDetailY + 1, 20, 10, 2, 2, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(ticket.seatNumber, rightColPassX + 5, passDetailY + 8);
+
+    // Fare in accent color
+    doc.setTextColor(...accentColor);
+    doc.text(ticket.fare, rightColPassX, passDetailY + 20);
+
+    // PAYMENT DETAILS SECTION
+    currentY = currentY + 60;
+
+    // Section container
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(leftColX, currentY, 175, 50, 3, 3, "F");
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(leftColX, currentY, 175, 50, 3, 3, "S");
+
+    // Section title
+    doc.setTextColor(...primaryColorDark);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("PAYMENT DETAILS", leftColX + 5, currentY + 10);
+
+    // Payment details in columns
+    const paymentY = currentY + 20;
+
+    // Left column
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Payment Method:", leftColPassX, paymentY);
+    doc.text("Transaction ID:", leftColPassX, paymentY + 15);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(ticket.paymentMethod, leftColPassX + 40, paymentY);
+    doc.text(ticket.transactionId, leftColPassX + 40, paymentY + 15);
+
+    // Right column
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Booking Date:", rightColPassX, paymentY);
+    doc.text("Status:", rightColPassX, paymentY + 15);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      new Date(ticket.bookingDate).toLocaleString(),
+      rightColPassX + 35,
+      paymentY
+    );
+
+    // Payment status with color indicator
+    doc.setFillColor(...successColor);
+    doc.circle(rightColPassX + 25, paymentY + 14, 3, "F");
+    doc.setTextColor(...successColor);
+    doc.text("Confirmed", rightColPassX + 35, paymentY + 15);
+
+    // Add simple barcode at the bottom
+    currentY = currentY + 60;
+    const barcodeY = currentY;
+    const barcodeHeight = 15;
+
+    // Simple barcode
+    doc.setFillColor(0, 0, 0);
+
+    // Create barcode pattern based on ticket ID
+    const ticketIdNum = parseInt(ticket.ticketId.replace(/\D/g, "")) || 123456;
+    let seed = ticketIdNum;
+
+    const generateRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
+    for (let i = 0; i < 60; i++) {
+      if (generateRandom() > 0.5) {
+        const width = Math.max(1, Math.floor(generateRandom() * 3));
+        doc.rect(leftColX + i * 3, barcodeY, width, barcodeHeight, "F");
+      }
+    }
+
+    // Add ticket ID below barcode
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(ticket.ticketId, leftColX + 90, barcodeY + barcodeHeight + 5, {
+      align: "center",
+    });
+
+    // Simple footer
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "This is an electronic ticket. Please show this ticket during your journey.",
+      105,
+      282,
+      { align: "center" }
+    );
+    doc.text("For assistance, contact our helpline: +91 9876543210", 105, 287, {
       align: "center",
     });
 
@@ -278,15 +510,16 @@ const PaymentPage = () => {
       <AnimatePresence>
         {isPaymentSuccessful ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.5 }}
             className="container mx-auto px-4 py-8"
           >
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
               <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-8 text-white text-center">
                 <div className="bg-white/20 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="h-12 w-12" />
+                  <CheckCircle className="h-12 w-12 animate-bounce" />
                 </div>
                 <h2 className="text-2xl font-bold">Payment Successful!</h2>
                 <p className="mt-2 opacity-90">
@@ -398,6 +631,7 @@ const PaymentPage = () => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
+                transition={{ duration: 0.5 }}
                 className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg flex items-center gap-3 ${
                   isEmailSent
                     ? "bg-green-100 text-green-800 border border-green-200"
